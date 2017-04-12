@@ -1,0 +1,67 @@
+if (!require(psych)) {install.packages("psych"); require(bda)} 
+if (!require(ggplot2)) {install.packages("ggplot2"); require(ggplot2)} 
+if (!require(ggfortify)) {install.packages("ggfortify"); require(ggfortify)} 
+
+raw_data<-read.csv("~/science/Genotyping data used for The Genetic Structure and History .csv")
+
+name_list<-raw_data[,3]
+
+#subset the data to match EA
+keep_list<-c("Sandawe","Iraqw","Turu","Mbugwe","Rangi","Maasai (Tanzania)",
+             "Pare","Bakola","Bedzan","Ngumba","Kanuri","Giziga",
+             "Baggara","Kotoko","Bamoun","Banen","Bafia","Batanga",
+             "Podokwo","Hazara","Sindhi","Pathan","Burusho","Mbuti",
+             "Druze","Cambodian","Japanese","Russian","Mandenka",
+             "Yoruba","Yakut","Pima","Miao","Daur","Hezhen","Xibo",
+             "Tu","Basque","Adygei","Igbo","Igala","Gwari","Dinka",
+             "Datoga","Sukuma","Gogo","Fiome/Gorowa","Fang","Mabea",
+             "South Tikar","North Tikar","Ntumu","Massa","Ashanti",
+             "Brong","Maasai Mumonyot","Maasai Il'gwesi","Samburu",
+             "Samba'a","Dorobo","Yoruba (CEPH)","Burji","Luo","Kikuyu",
+             "Okiek","Nandi","Turkana","Konso","Laka","Kanembou",
+             "Mbum","Gbaya","Fulani Mbororo","Kongo","Baluba","Dioula",
+             "Nuer","Nyimang","Sara (various)","Venda","Xhosa","Koma",
+             "Beta Israel","Dogon","Temani","Bengali","Gujarat","Kashmiri",
+             "Parsi","Punjabi","Tamil","Telugu")
+
+for (i in keep_list){
+  if (i %in% name_list == FALSE){
+    print ("not matching")
+    print (i)
+  }
+}# check to see if data entrance is correct
+
+african_data<-raw_data[ which(raw_data$population.name %in% keep_list==TRUE),]
+
+african_name_list<-african_data[,3]
+
+african.pca<-prcomp(african_data[,-c(1,2,3)],center=TRUE,scale.=TRUE) #standard pca function in r.
+plot(african.pca, type = "l") # check variance explained. Not looking ideal, but we'll go with 2 pc solution since we want to visualize potential clustering patterns.
+
+autoplot(african.pca, data = african_data,colour="population.name", cex=0.3)
+
+
+#------------------------------------------------#
+african_data<-african_data[,-1024]
+#remove the last column because it only has microsatellite marker in one chromosome
+african_data<-african_data[,-c(1,2,3)]
+#remove the first 3 columns as they don't contain marker information
+
+hetero_value<-rep(NA,1990) #creating an empty vector to store heterozygocity data
+for (i in c(1:1990)){
+  hetero_num<-rep(NA,510)
+  for (j in c(1:510)){
+    if (african_data[i,2*j-1]==african_data[i,2*j]){hetero_num[j]<-0}
+    if (african_data[i,2*j-1]!=african_data[i,2*j]){hetero_num[j]<-1}
+  }
+  hetero_value[i]<-sum(hetero_num)/510
+}
+#takes 2 minutes to compute; the proportion of heterozygote markers for eacher individual.
+ #a new vector "hetero_value" is created to store heterozygocity data. 
+
+african_data$heterozygocity<-hetero_value
+
+african_heterozygocity<-aggregate(african_data[,1021],list(african_name_list),mean)
+names(african_heterozygocity)<- c("population name","mean heterozygocity")
+
+write.csv(african_heterozygocity,file="african_heterozygocity.csv")
