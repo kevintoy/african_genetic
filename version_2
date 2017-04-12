@@ -34,6 +34,7 @@ for (i in keep_list){
 african_data<-raw_data[ which(raw_data$population.name %in% keep_list==TRUE),]
 
 african_name_list<-african_data[,3]
+african_code_list<-african_data[,2]
 
 african.pca<-prcomp(african_data[,-c(1,2,3)],center=TRUE,scale.=TRUE) #standard pca function in r.
 plot(african.pca, type = "l") # check variance explained. Not looking ideal, but we'll go with 2 pc solution since we want to visualize potential clustering patterns.
@@ -57,11 +58,12 @@ for (i in c(1:1990)){
   hetero_value[i]<-sum(hetero_num)/510
 }
 #takes 2 minutes to compute; the proportion of heterozygote markers for eacher individual.
- #a new vector "hetero_value" is created to store heterozygocity data. 
+#a new vector "hetero_value" is created to store heterozygocity data. 
 
 african_data$heterozygocity<-hetero_value
+african_data$population_code<-african_code_list
+african_heterozygocity<-aggregate(african_data[,1021],list(african_code_list),mean)
 
-african_heterozygocity<-aggregate(african_data[,1021],list(african_name_list),mean)
-names(african_heterozygocity)<- c("population name","mean heterozygocity")
+names(african_heterozygocity)<- c("population code","mean heterozygocity")
 
 write.csv(african_heterozygocity,file="african_heterozygocity.csv")
