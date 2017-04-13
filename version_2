@@ -51,11 +51,21 @@ african_data<-african_data[,-c(1,2,3)]
 hetero_value<-rep(NA,1990) #creating an empty vector to store heterozygocity data
 for (i in c(1:1990)){
   hetero_num<-rep(NA,510)
+  missing_loci_num<-0
   for (j in c(1:510)){
-    if (african_data[i,2*j-1]==african_data[i,2*j]){hetero_num[j]<-0}
-    if (african_data[i,2*j-1]!=african_data[i,2*j]){hetero_num[j]<-1}
+    
+    if (african_data[i,2*j-1]==0 |african_data[i,2*j]==0){
+      missing_loci_num<-missing_loci_num+1
+    }
+    
+    if (african_data[i,2*j-1]==african_data[i,2*j] & african_data[i,2*j-1]!=0 &african_data[i,2*j]!=0){
+      hetero_num[j]<-0
+    }
+    if (african_data[i,2*j-1]!=african_data[i,2*j] & african_data[i,2*j-1]!=0 &african_data[i,2*j]!=0){
+      hetero_num[j]<-1}
   }
-  hetero_value[i]<-sum(hetero_num)/510
+  hetero_value[i]<-sum(hetero_num[!is.na(hetero_num)])/(510-missing_loci_num)
+  }
 }
 #takes 2 minutes to compute; the proportion of heterozygote markers for eacher individual.
 #a new vector "hetero_value" is created to store heterozygocity data. 
